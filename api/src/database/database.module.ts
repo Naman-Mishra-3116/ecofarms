@@ -1,7 +1,13 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
+import { ModelDefinition, MongooseModule } from '@nestjs/mongoose';
+import { Otp, OtpSchema } from 'src/otp/otp.schema';
 import { User, UserSchema } from 'src/user/user.schema';
+
+const ENTITIES: ModelDefinition[] = [
+  { name: User.name, schema: UserSchema },
+  { name: Otp.name, schema: OtpSchema },
+];
 
 @Global()
 @Module({
@@ -15,7 +21,7 @@ import { User, UserSchema } from 'src/user/user.schema';
       },
     }),
 
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature(ENTITIES),
   ],
 
   exports: [MongooseModule],

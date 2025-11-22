@@ -13,6 +13,7 @@ import { LoginUserOrAdminDto } from './dto/login-user.dto';
 import { BcryptService } from './providers/bcrypt.provider';
 import type { Response } from 'express';
 import { Cookie } from 'src/utils/enums/cookie.enum';
+import { ForgetPasswordDto } from './dto/forget-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -116,5 +117,10 @@ export class AuthService {
       message: 'Logged in successfully',
       email: user.email,
     };
+  }
+
+  public async forgetPassword(forgetPassDTO: ForgetPasswordDto) {
+    const { email } = forgetPassDTO;
+    
   }
 }

@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { CreateAdminOrUserDto } from './dto/create-user.dto';
 import { LoginUserOrAdminDto } from './dto/login-user.dto';
+import { ForgetPasswordDto } from './dto/forget-password.dto';
 
 @Controller('auth/user')
 export class UserAuthController {
@@ -19,5 +20,10 @@ export class UserAuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     return this.authService.userSignIn(loginUserDto, res);
+  }
+
+  @Post('forget-password')
+  public forgetPassCl(@Body() forgetPassDTO: ForgetPasswordDto) {
+    return this.authService.forgetPassword(forgetPassDTO);
   }
 }
