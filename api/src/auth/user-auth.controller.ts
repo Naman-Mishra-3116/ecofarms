@@ -23,7 +23,10 @@ export class UserAuthController {
   }
 
   @Post('forget-password')
-  public forgetPassCl(@Body() forgetPassDTO: ForgetPasswordDto) {
-    return this.authService.forgetPassword(forgetPassDTO);
+  public forgetPassCl(
+    @Body() forgetPassDTO: ForgetPasswordDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.forgetPassword(forgetPassDTO, res);
   }
 }

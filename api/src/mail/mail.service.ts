@@ -7,7 +7,7 @@ export class MailService {
 
   public async sendOTPMail(
     entity: { email: string; userName: string },
-    otp: number,
+    otp: string,
   ) {
     try {
       const { email, userName } = entity;
@@ -20,7 +20,7 @@ export class MailService {
         context: {
           otp,
           userName,
-          year: new Date().getFullYear()
+          year: new Date().getFullYear(),
         },
       });
 

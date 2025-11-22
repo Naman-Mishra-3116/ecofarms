@@ -14,6 +14,8 @@ import { BcryptService } from './providers/bcrypt.provider';
 import type { Response } from 'express';
 import { Cookie } from 'src/utils/enums/cookie.enum';
 import { ForgetPasswordDto } from './dto/forget-password.dto';
+import { OtpService } from 'src/otp/otp.service';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +24,8 @@ export class AuthService {
     private readonly userModel: Model<User>,
     private readonly bcryptService: BcryptService,
     private readonly jwtConfigService: JwtConfigService,
+    private readonly otpService: OtpService,
+    private readonly mailService: MailService,
   ) {}
 
   public async userSignUp(createUserDto: CreateAdminOrUserDto) {
@@ -119,8 +123,52 @@ export class AuthService {
     };
   }
 
-  public async forgetPassword(forgetPassDTO: ForgetPasswordDto) {
+  public async forgetPassword(forgetPassDTO: ForgetPasswordDto, res: Response) {
     const { email } = forgetPassDTO;
-    
+    const user = await this.userModel.findOne({ email });
+
+    if (!user) {
+      throw new BadRequestException('No user with specified email exist');
+    }
+
+    const otp = await this.otpService.createOTP({
+      email: user.email,
+      target: 'user',
+    });
+
+    const payload = {
+      email: user.email,
+      id: user._id.toString(),
+    };
+
+    const otpToken = await this.jwtConfigService.generateToken(
+      payload,
+      Token.Otp,
+    );
+
+    const otpCookies = this.jwtConfigService.setCookies(
+      Cookie.OtpCookie,
+      otpToken,
+      res,
+    );
+
+    const mailSent = await this.mailService.sendOTPMail(
+      { email: user.email, userName: user.userName },
+      otp,
+    );
+
+    if (!mailSent || !otpCookies) {
+      throw new InternalServerErrorException('Something went wrong.');
+    }
+
+    return {
+      message: 'Verification OTP has been sent to your email',
+      success: true,
+      error: false,
+      status: 'success',
+      data: {
+        userName: user.userName,
+      },
+    };
   }
 }

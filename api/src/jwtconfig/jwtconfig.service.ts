@@ -1,12 +1,11 @@
 import {
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
+    ExecutionContext,
+    Injectable,
+    UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
-import { ObjectId } from 'mongoose';
 import { Cookie } from 'src/utils/enums/cookie.enum';
 import { Token } from 'src/utils/enums/token.enum';
 
