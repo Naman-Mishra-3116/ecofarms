@@ -7,7 +7,7 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class CreateUserDto {
+export class CreateAdminOrUserDto {
   @IsNotEmpty()
   @IsEmail()
   @Transform(({ value }) => value.trim())

@@ -5,6 +5,9 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { Response } from 'express';
+import { ObjectId } from 'mongoose';
+import { Cookie } from 'src/utils/enums/cookie.enum';
 import { Token } from 'src/utils/enums/token.enum';
 
 @Injectable()
@@ -60,9 +63,12 @@ export class JwtConfigService {
     return { expiresIn, payload };
   }
 
-  public async generateToken(user: { email: string; id: string }, type: Token) {
+  public async generateToken(
+    entity: { email: string; id: string },
+    type: Token,
+  ) {
     const secret = this.configService.get('jwt.secret');
-    const { expiresIn, payload } = this.getPayload(user, type);
+    const { expiresIn, payload } = this.getPayload(entity, type);
     const token = await this.jwtService.signAsync(payload, {
       secret,
       expiresIn,
@@ -86,5 +92,31 @@ export class JwtConfigService {
     const req = context.switchToHttp().getRequest();
     const cookie = req.cookies[type];
     return cookie;
+  }
+
+  public setCookies(name: Cookie, value: string, res: Response) {
+    try {
+      const age = {
+        [Cookie.UserAccess]:
+          this.configService.get('jwt.userAccessExpiry') * 1000,
+        [Cookie.UserRefresh]:
+          this.configService.get('jwt.refreshExpiry') * 1000,
+        [Cookie.AdminAccess]:
+          this.configService.get('jwt.adminAccessExpiry') * 1000,
+        [Cookie.OtpCookie]: this.configService.get('jwt.resetExpiry') * 1000,
+        [Cookie.ResetCookie]: this.configService.get('jwt.resetExpiry') * 1000,
+      };
+
+      res.cookie(name, value, {
+        sameSite: 'strict',
+        secure: true,
+        httpOnly: true,
+        maxAge: age[name],
+      });
+
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }
