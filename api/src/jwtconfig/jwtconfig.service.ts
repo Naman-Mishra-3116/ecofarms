@@ -1,11 +1,12 @@
 import {
+  BadRequestException,
   ExecutionContext,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { Cookie } from 'src/utils/enums/cookie.enum';
 import { Token } from 'src/utils/enums/token.enum';
 
@@ -76,21 +77,33 @@ export class JwtConfigService {
     return token;
   }
 
-  public async verifyToken(token: string) {
+  public async verifyToken(token: string, tokenType: Token) {
     try {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: this.configService.get('jwt.secret'),
       });
       return payload;
     } catch (error) {
-      throw new UnauthorizedException(error.message);
+      switch (tokenType) {
+        case Token.AccessUser:
+        case Token.AccessAdmin:
+        case Token.Refresh:
+          throw new UnauthorizedException(error.message);
+
+        case Token.Otp:
+        case Token.Reset:
+          throw new BadRequestException('Otp reset token expired');
+      }
     }
   }
 
-  public async extractToken(context: ExecutionContext, type: Cookie) {
+  public async extractToken(
+    context: ExecutionContext,
+    type: Cookie,
+  ): Promise<{ cookie: string; req: Request }> {
     const req = context.switchToHttp().getRequest();
     const cookie = req.cookies[type];
-    return cookie;
+    return { cookie, req };
   }
 
   public setCookies(name: Cookie, value: string, res: Response) {

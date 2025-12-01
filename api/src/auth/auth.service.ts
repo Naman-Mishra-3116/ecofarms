@@ -16,12 +16,17 @@ import { Cookie } from 'src/utils/enums/cookie.enum';
 import { ForgetPasswordDto } from './dto/forget-password.dto';
 import { OtpService } from 'src/otp/otp.service';
 import { MailService } from 'src/mail/mail.service';
+import { VerifyOTPDto } from './dto/verify-otp.dto';
+import { Admin } from 'src/admin/admin.schema';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
+    @InjectModel(Admin.name)
+    private readonly adminModel: Model<Admin>,
     private readonly bcryptService: BcryptService,
     private readonly jwtConfigService: JwtConfigService,
     private readonly otpService: OtpService,
@@ -157,9 +162,6 @@ export class AuthService {
       otp,
     );
 
-    console.log("Mail sent: ",mailSent);
-    console.log("Mail sent: ",otpCookies);
-
     if (!mailSent || !otpCookies) {
       throw new InternalServerErrorException('Something went wrong.');
     }
@@ -171,6 +173,88 @@ export class AuthService {
       status: 'success',
       data: {
         userName: user.userName,
+      },
+    };
+  }
+
+  public async verifyOtp(
+    email: string,
+    otp: VerifyOTPDto,
+    target: 'user' | 'admin',
+    res: Response,
+  ) {
+    const model = target === 'user' ? this.userModel : this.adminModel;
+
+    const entity = await model.findOne({ email });
+
+    if (!entity) {
+      throw new BadRequestException('User with email not found!');
+    }
+
+    const isValidOtp = await this.otpService.validateOTP(
+      otp.otp,
+      email,
+      target,
+    );
+
+    if (!isValidOtp) {
+      throw new BadRequestException('OTP not valid');
+    }
+
+    res.clearCookie(Cookie.OtpCookie);
+    const resetToken = await this.jwtConfigService.generateToken(
+      {
+        email: entity.email,
+        id: entity._id.toString(),
+      },
+      Token.Reset,
+    );
+
+    const cookieGenerated = this.jwtConfigService.setCookies(
+      Cookie.ResetCookie,
+      resetToken,
+      res,
+    );
+
+    if (cookieGenerated) {
+      return {
+        status: 'success',
+        error: false,
+        message: 'OTP Verified successfully!',
+        success: true,
+      };
+    }
+  }
+
+  public async resetPassword(
+    email: string,
+    resetPassDTO: ResetPasswordDto,
+    res: Response,
+    target: 'user' | 'admin',
+  ) {
+    const model = target === 'user' ? this.userModel : this.adminModel;
+    const entity = await model.findOne({ email });
+
+    if (!entity) {
+      throw new BadRequestException(
+        `${target === 'user' ? 'User' : 'Admin'} with specified email not found`,
+      );
+    }
+
+    const hashedPassword = await this.bcryptService.hashPassword(
+      resetPassDTO.password,
+    );
+
+    entity.password = hashedPassword;
+    res.clearCookie(Cookie.ResetCookie);
+    await entity.save();
+    return {
+      success: true,
+      message: 'Password reset successfully!',
+      status: 'success',
+      error: false,
+      data: {
+        userName: entity.userName,
       },
     };
   }

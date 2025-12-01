@@ -19,6 +19,9 @@ export class Otp {
     required: true,
     type: Date,
     default: () => new Date(Date.now() + 10 * 60 * 1000),
+    index: {
+      expires: 0,
+    },
   })
   expiresAt: Date;
 }

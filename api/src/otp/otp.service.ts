@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Otp } from './otp.schema';
 import { Model } from 'mongoose';
+import { VerifyOTPDto } from 'src/auth/dto/verify-otp.dto';
 
 type MailEntity = {
   email: string;
@@ -28,5 +29,32 @@ export class OtpService {
     });
 
     return code;
+  }
+
+  public async validateOTP(
+    code: string,
+    email: string,
+    target: 'user' | 'admin',
+  ) {
+    const otpEntity = await this.otpModel.findOne({
+      target,
+      email,
+      otp: code,
+      isUsed: false,
+    });
+
+    if (!otpEntity) {
+      throw new BadRequestException(
+        'OTP expired or invalid. Please request a new OTP.',
+      );
+    }
+
+    if (otpEntity.expiresAt <= new Date()) {
+      throw new BadRequestException('OTP Expired, Please request a new OTP');
+    }
+
+    otpEntity.isUsed = true;
+    await otpEntity.save();
+    return true;
   }
 }
