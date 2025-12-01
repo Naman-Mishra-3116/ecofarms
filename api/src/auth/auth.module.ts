@@ -1,0 +1,14 @@
+import { Module } from '@nestjs/common';
+import { JwtconfigModule } from 'src/jwtconfig/jwtconfig.module';
+import { AdminAuthController } from './admin-auth.controller';
+import { AuthService } from './auth.service';
+import { BcryptService } from './providers/bcrypt.provider';
+import { UserAuthController } from './user-auth.controller';
+import { OtpModule } from 'src/otp/otp.module';
+
+@Module({
+  imports: [JwtconfigModule, OtpModule],
+  controllers: [UserAuthController, AdminAuthController],
+  providers: [AuthService, BcryptService],
+})
+export class AuthModule {}

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Password Reset OTP</title>
+  </head>
+  <body
+    style="
+      font-family: Arial, sans-serif;
+      background-color: #f6f6f6;
+      margin: 0;
+      padding: 0;
+    "
+  >
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #f6f6f6; padding: 20px"
+    >
+      <tr>
+        <td>
+          <table
+            align="center"
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            style="
+              background-color: #ffffff;
+              padding: 30px;
+              border-radius: 8px;
+              box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            "
+          >
+            <tr>
+              <td style="text-align: center">
+                <h2 style="color: #333333; margin-bottom: 20px">
+                  Hello <%= userName %>,
+                </h2>
+                <p style="color: #555555; font-size: 16px; line-height: 1.5">
+                  You requested a password reset. Use the OTP below to reset
+                  your password. This OTP is valid for the next 10 minutes.
+                </p>
+                <div style="margin: 30px 0; text-align: center">
+                  <span
+                    style="
+                      display: inline-block;
+                      font-size: 24px;
+                      font-weight: bold;
+                      color: #ffffff;
+                      background-color: #1abb40c4;
+                      padding: 15px 25px;
+                      border-radius: 6px;
+                      letter-spacing: 2px;
+                    "
+                  >
+                    <%= otp %>
+                  </span>
+                </div>
+                <p style="color: #555555; font-size: 14px; line-height: 1.5">
+                  If you did not request this, please ignore this email.
+                </p>
+                <p style="color: #999999; font-size: 12px; margin-top: 30px">
+                 © <%= year %> Vrakshalaya. All rights reserved.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
