@@ -29,6 +29,7 @@ export class MailService {
       }
     } catch (error) {
       console.log(error);
+      return false;
     }
   }
 }

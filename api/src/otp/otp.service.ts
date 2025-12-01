@@ -1,8 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Otp } from './otp.schema';
 import { Model } from 'mongoose';
-import { VerifyOTPDto } from 'src/auth/dto/verify-otp.dto';
+import { Otp } from './otp.schema';
 
 type MailEntity = {
   email: string;

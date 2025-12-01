@@ -84,7 +84,6 @@ export class JwtConfigService {
       });
       return payload;
     } catch (error) {
-      console.log(error);
       switch (tokenType) {
         case Token.AccessUser:
         case Token.AccessAdmin:
@@ -93,7 +92,7 @@ export class JwtConfigService {
 
         case Token.Otp:
         case Token.Reset:
-          throw new BadRequestException(error.message);
+          throw new BadRequestException('OTP or Reset Token expired');
       }
     }
   }
