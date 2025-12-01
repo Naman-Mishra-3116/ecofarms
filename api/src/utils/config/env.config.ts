@@ -18,10 +18,10 @@ export default () => {
       audience: process.env.JWT_AUDIENCE,
       secret: process.env.JWT_SECRET,
 
-      adminAccessExpiry: process.env.JWT_ADMIN_ACC_TOKEN_EXPIRY_TIME,
-      userAccessExpiry: process.env.JWT_USER_ACC_TOKEN_EXPIRY_TIME,
-      refreshExpiry: process.env.JWT_REF_TOKEN_EXPIRY_TIME,
-      resetExpiry: process.env.JWT_RES_TOKEN_EXPIRY_TIME,
+      adminAccessExpiry: parseInt(process.env.JWT_ADMIN_ACC_TOKEN_EXPIRY_TIME!),
+      userAccessExpiry: parseInt(process.env.JWT_USER_ACC_TOKEN_EXPIRY_TIME!),
+      refreshExpiry: parseInt(process.env.JWT_REF_TOKEN_EXPIRY_TIME!),
+      resetExpiry: parseInt(process.env.JWT_RES_TOKEN_EXPIRY_TIME!),
     },
 
     mail: {

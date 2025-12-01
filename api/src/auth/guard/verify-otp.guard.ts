@@ -22,6 +22,7 @@ export class VerifyOTPGuard implements CanActivate {
       throw new BadRequestException('cookie missing or not provided');
     }
 
+    console.log(cookie, "this is cookie");
     const payload: { email: string } = await this.jwtConfigService.verifyToken(
       cookie,
       Token.Otp,
