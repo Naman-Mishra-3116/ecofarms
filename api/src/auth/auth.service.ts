@@ -157,6 +157,9 @@ export class AuthService {
       otp,
     );
 
+    console.log("Mail sent: ",mailSent);
+    console.log("Mail sent: ",otpCookies);
+
     if (!mailSent || !otpCookies) {
       throw new InternalServerErrorException('Something went wrong.');
     }

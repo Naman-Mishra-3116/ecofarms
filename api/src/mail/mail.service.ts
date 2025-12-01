@@ -14,8 +14,8 @@ export class MailService {
       const info = await this.mailerService.sendMail({
         to: email,
         date: new Date(),
-        from: '<vrakshalaya@gmail.com>',
-        template: '/otp',
+        from: '<typingtestteam@gmail.com>',
+        template: './otp',
         subject: 'Password Reset OTP',
         context: {
           otp,
@@ -28,7 +28,7 @@ export class MailService {
         return true;
       }
     } catch (error) {
-      console.log(error.message);
+      console.log(error);
     }
   }
 }

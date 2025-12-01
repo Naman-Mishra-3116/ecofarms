@@ -1,7 +1,7 @@
 import {
-    ExecutionContext,
-    Injectable,
-    UnauthorizedException,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -87,7 +87,7 @@ export class JwtConfigService {
     }
   }
 
-  public async extractToken(context: ExecutionContext, type: Token) {
+  public async extractToken(context: ExecutionContext, type: Cookie) {
     const req = context.switchToHttp().getRequest();
     const cookie = req.cookies[type];
     return cookie;
