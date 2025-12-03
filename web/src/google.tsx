@@ -44,6 +44,8 @@ const google: React.FC<IProps> = () => {
           }}
         />
       </div>
+      <p>{user}</p>
+      <p>{error}</p>
     </GoogleOAuthProvider>
   );
 };
