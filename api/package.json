@@ -35,6 +35,7 @@
     "google-auth-library": "^10.5.0",
     "mongoose": "^8.20.1",
     "nodemailer": "^7.0.9",
+    "razorpay": "^2.9.6",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },

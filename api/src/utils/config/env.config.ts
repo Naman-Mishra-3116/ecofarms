@@ -37,5 +37,10 @@ export default () => {
       secret: process.env.GOOGLE_CLIENT_SECRET,
       redirectUrl: process.env.GOOGLE_CLIENT_REDIRECT,
     },
+
+    payment: {
+      key: process.env.PAYMENT_API_KEY,
+      secret: process.env.PAYMENT_KEY_SECRET,
+    },
   };
 };
