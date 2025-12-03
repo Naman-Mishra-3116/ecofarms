@@ -6,9 +6,10 @@ import { BcryptService } from './providers/bcrypt.provider';
 import { OtpModule } from 'src/otp/otp.module';
 import { UserAuthController } from './routes/user-auth.controller';
 import { GoogleAuthProvider } from './providers/google-auth.provider';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
-  imports: [JwtconfigModule, OtpModule],
+  imports: [JwtconfigModule, OtpModule, UserModule],
   controllers: [UserAuthController, AdminAuthController],
   providers: [AuthService, BcryptService, GoogleAuthProvider],
 })
