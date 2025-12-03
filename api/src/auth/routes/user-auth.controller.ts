@@ -1,15 +1,16 @@
 import { Body, Controller, Post, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
-import { AuthService } from './auth.service';
-import { CreateAdminOrUserDto } from './dto/create-user.dto';
-import { LoginUserOrAdminDto } from './dto/login-user.dto';
-import { ForgetPasswordDto } from './dto/forget-password.dto';
-import { VerifyOTPGuard } from './guard/verify-otp.guard';
-import { VerifiedUser } from './decorators/verify-user.decorator';
-import { VerifyOTPDto } from './dto/verify-otp.dto';
-import { ResetPasswordGuard } from './guard/reset-password.guard';
-import { ResetUser } from './decorators/reset-user.decorator';
-import { ResetPasswordDto } from './dto/reset-password.dto';
+import { AuthService } from '../auth.service';
+import { CreateAdminOrUserDto } from '../dto/create-user.dto';
+import { LoginUserOrAdminDto } from '../dto/login-user.dto';
+import { ForgetPasswordDto } from '../dto/forget-password.dto';
+import { VerifyOTPGuard } from '../guard/verify-otp.guard';
+import { VerifiedUser } from '../decorators/verify-user.decorator';
+import { VerifyOTPDto } from '../dto/verify-otp.dto';
+import { ResetPasswordGuard } from '../guard/reset-password.guard';
+import { ResetUser } from '../decorators/reset-user.decorator';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
+import { GoogleLoginDto } from '../dto/google-login.dto';
 
 @Controller('auth/user')
 export class UserAuthController {
@@ -54,5 +55,13 @@ export class UserAuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     return this.authService.resetPassword(email, resetPassDTO, res, 'user');
+  }
+
+  @Post('google')
+  public googleLogin(
+    @Body() googleLoginDto: GoogleLoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.googleLogin(googleLoginDto, res);
   }
 }

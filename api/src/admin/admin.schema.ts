@@ -6,7 +6,7 @@ export class Admin {
   @Prop({ required: true, type: String })
   userName: string;
 
-  @Prop({ required: true, type: String })
+  @Prop({ required: true, type: String, unique: true })
   email: string;
 
   @Prop({ required: true, type: String })

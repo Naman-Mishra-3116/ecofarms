@@ -31,5 +31,11 @@ export default () => {
       password: process.env.MAIL_PASSWORD,
       from: process.env.MAIL_FROM,
     },
+
+    google: {
+      client: process.env.GOOGLE_CLIENT_ID,
+      secret: process.env.GOOGLE_CLIENT_SECRET,
+      redirectUrl: process.env.GOOGLE_CLIENT_REDIRECT,
+    },
   };
 };
