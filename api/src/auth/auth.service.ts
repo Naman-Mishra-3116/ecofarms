@@ -4,21 +4,23 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import type { Response } from 'express';
 import { Model } from 'mongoose';
+import { Admin } from 'src/admin/admin.schema';
 import { JwtConfigService } from 'src/jwtconfig/jwtconfig.service';
+import { MailService } from 'src/mail/mail.service';
+import { OtpService } from 'src/otp/otp.service';
 import { User } from 'src/user/user.schema';
+import { Cookie } from 'src/utils/enums/cookie.enum';
 import { Token } from 'src/utils/enums/token.enum';
 import { CreateAdminOrUserDto } from './dto/create-user.dto';
-import { LoginUserOrAdminDto } from './dto/login-user.dto';
-import { BcryptService } from './providers/bcrypt.provider';
-import type { Response } from 'express';
-import { Cookie } from 'src/utils/enums/cookie.enum';
 import { ForgetPasswordDto } from './dto/forget-password.dto';
-import { OtpService } from 'src/otp/otp.service';
-import { MailService } from 'src/mail/mail.service';
-import { VerifyOTPDto } from './dto/verify-otp.dto';
-import { Admin } from 'src/admin/admin.schema';
+import { LoginUserOrAdminDto } from './dto/login-user.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyOTPDto } from './dto/verify-otp.dto';
+import { BcryptService } from './providers/bcrypt.provider';
+import { GoogleLoginDto } from './dto/google-login.dto';
+import { GoogleAuthProvider } from './providers/google-auth.provider';
 
 @Injectable()
 export class AuthService {
@@ -31,6 +33,7 @@ export class AuthService {
     private readonly jwtConfigService: JwtConfigService,
     private readonly otpService: OtpService,
     private readonly mailService: MailService,
+    private readonly googleAuthService: GoogleAuthProvider,
   ) {}
 
   public async userSignUp(createUserDto: CreateAdminOrUserDto) {
@@ -76,9 +79,15 @@ export class AuthService {
       throw new BadRequestException('User with specified email does not exist');
     }
 
+    if (user.googleId && !user.password) {
+      throw new BadRequestException(
+        'This account was created using Google. Please login with Google.',
+      );
+    }
+
     const isValidPassword = await this.bcryptService.verifyPassword(
       password,
-      user.password,
+      user.password as string,
     );
 
     if (!isValidPassword) {
@@ -183,7 +192,8 @@ export class AuthService {
     target: 'user' | 'admin',
     res: Response,
   ) {
-    const model = target === 'user' ? this.userModel : this.adminModel;
+    const model: Model<any> =
+      target === 'user' ? this.userModel : this.adminModel;
 
     const entity = await model.findOne({ email });
 
@@ -232,7 +242,8 @@ export class AuthService {
     res: Response,
     target: 'user' | 'admin',
   ) {
-    const model = target === 'user' ? this.userModel : this.adminModel;
+    const model: Model<any> =
+      target === 'user' ? this.userModel : this.adminModel;
     const entity = await model.findOne({ email });
 
     if (!entity) {
@@ -257,5 +268,9 @@ export class AuthService {
         userName: entity.userName,
       },
     };
+  }
+
+  public async googleLogin(googleLoginDto: GoogleLoginDto, res: Response) {
+    return this.googleAuthService.authenticate(googleLoginDto, res);
   }
 }

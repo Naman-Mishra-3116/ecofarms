@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common';
 import { JwtconfigModule } from 'src/jwtconfig/jwtconfig.module';
-import { AdminAuthController } from './admin-auth.controller';
+import { AdminAuthController } from './routes/admin-auth.controller';
 import { AuthService } from './auth.service';
 import { BcryptService } from './providers/bcrypt.provider';
-import { UserAuthController } from './user-auth.controller';
 import { OtpModule } from 'src/otp/otp.module';
+import { UserAuthController } from './routes/user-auth.controller';
+import { GoogleAuthProvider } from './providers/google-auth.provider';
 
 @Module({
   imports: [JwtconfigModule, OtpModule],
   controllers: [UserAuthController, AdminAuthController],
-  providers: [AuthService, BcryptService],
+  providers: [AuthService, BcryptService, GoogleAuthProvider],
 })
 export class AuthModule {}

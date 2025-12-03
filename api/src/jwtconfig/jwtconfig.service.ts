@@ -131,4 +131,12 @@ export class JwtConfigService {
       return false;
     }
   }
+
+  public async generateUserAuthTokens(entity: { email: string; id: string }) {
+    const accessToken = await this.generateToken(entity, Token.AccessUser);
+    const refreshToken = await this.generateToken(entity, Token.Refresh);
+    return { accessToken, refreshToken };
+  }
+
+  
 }
