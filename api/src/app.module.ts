@@ -9,8 +9,9 @@ import { OtpModule } from './otp/otp.module';
 import { MailModule } from './shared/mail/mail.module';
 import { PaymentModule } from './payment/payment.module';
 import envConfig from './utils/config/env.config';
-import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from './auth/guard/access-token.guard';
+import { APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { AuthGuard } from './common/guard/access-token.guard';
+import { AppValidationPipe } from './common/pipes/app-validation.pipe';
 
 const ENV_TYPE = process.env.NODE_ENV?.trim();
 
@@ -31,6 +32,10 @@ const ENV_TYPE = process.env.NODE_ENV?.trim();
     PaymentModule,
   ],
   providers: [
+    {
+      provide: APP_PIPE,
+      useClass: AppValidationPipe,
+    },
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
