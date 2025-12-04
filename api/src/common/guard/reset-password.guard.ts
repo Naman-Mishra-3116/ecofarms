@@ -1,37 +1,37 @@
 import {
+  BadRequestException,
   CanActivate,
   ExecutionContext,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
-import { JwtConfigService } from 'src/jwtconfig/jwtconfig.service';
-import { REFRESH_USER } from 'src/utils/constants';
+import { JwtConfigService } from 'src/shared/jwtconfig/jwtconfig.service';
+import { RESET_USER } from 'src/utils/constants';
 import { Cookie } from 'src/utils/enums/cookie.enum';
 import { Token } from 'src/utils/enums/token.enum';
 
 @Injectable()
-export class RefreshGuard implements CanActivate {
+export class ResetPasswordGuard implements CanActivate {
   constructor(private readonly jwtConfigService: JwtConfigService) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const { cookie, req } = await this.jwtConfigService.extractToken(
       context,
-      Cookie.UserRefresh,
+      Cookie.ResetCookie,
     );
 
     if (!cookie) {
-      throw new UnauthorizedException('Unauthorized');
+      throw new BadRequestException('Reset token not found');
     }
 
-    const payload: RefreshPayload = await this.jwtConfigService.verifyToken(
+    const payload: { email: string } = await this.jwtConfigService.verifyToken(
       cookie,
-      Token.Refresh,
+      Token.Reset,
     );
 
     if (!payload) {
-      throw new UnauthorizedException('Unauthorized');
+      throw new BadRequestException('Payload missing or not found');
     }
 
-    req[REFRESH_USER] = payload;
+    req[RESET_USER] = payload;
     return true;
   }
 }

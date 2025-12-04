@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { JwtconfigModule } from 'src/jwtconfig/jwtconfig.module';
+import { JwtconfigModule } from 'src/shared/jwtconfig/jwtconfig.module';
 import { OtpModule } from 'src/otp/otp.module';
 import { UserModule } from 'src/user/user.module';
 import { AuthService } from './auth.service';

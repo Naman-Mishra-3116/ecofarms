@@ -1,37 +1,37 @@
 import {
-  BadRequestException,
   CanActivate,
   ExecutionContext,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { JwtConfigService } from 'src/jwtconfig/jwtconfig.service';
-import { OTP_USER } from 'src/utils/constants';
+import { JwtConfigService } from 'src/shared/jwtconfig/jwtconfig.service';
+import { REFRESH_USER } from 'src/utils/constants';
 import { Cookie } from 'src/utils/enums/cookie.enum';
 import { Token } from 'src/utils/enums/token.enum';
 
 @Injectable()
-export class VerifyOTPGuard implements CanActivate {
+export class RefreshGuard implements CanActivate {
   constructor(private readonly jwtConfigService: JwtConfigService) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const { cookie, req } = await this.jwtConfigService.extractToken(
       context,
-      Cookie.OtpCookie,
+      Cookie.UserRefresh,
     );
 
     if (!cookie) {
-      throw new BadRequestException('cookie missing or not provided');
+      throw new UnauthorizedException('Unauthorized');
     }
 
-    const payload: { email: string } = await this.jwtConfigService.verifyToken(
+    const payload: RefreshPayload = await this.jwtConfigService.verifyToken(
       cookie,
-      Token.Otp,
+      Token.Refresh,
     );
 
     if (!payload) {
-      throw new BadRequestException('otp token expired');
+      throw new UnauthorizedException('Unauthorized');
     }
 
-    req[OTP_USER] = payload;
+    req[REFRESH_USER] = payload;
     return true;
   }
 }
