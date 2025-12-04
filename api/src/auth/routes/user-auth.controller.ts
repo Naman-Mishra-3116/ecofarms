@@ -15,6 +15,7 @@ import { RefreshGuard } from '../guard/refresh-token.guard';
 import { RequestUser } from '../decorators/refresh-user.decorator';
 import { Auth } from 'src/utils/enums/auth.enum';
 import { Permit } from '../decorators/auth.decorator';
+import { Person } from '../decorators/active-user.decorator';
 
 @Controller('auth/user')
 export class UserAuthController {
@@ -80,7 +81,7 @@ export class UserAuthController {
 
   @Permit(Auth.User)
   @Get('wow')
-  public wowCon() {
-    return 'working fine';
+  public wowCon(@Person() person: Payload) {
+    return person;
   }
 }

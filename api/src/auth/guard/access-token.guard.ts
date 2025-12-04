@@ -58,7 +58,13 @@ export class AuthGuard implements CanActivate {
       throw new ForbiddenException('Access Forbidden');
     }
 
-    req[ACTIVE_PERSON] = payload;
+    const data = {
+      email: payload.email,
+      id: payload.id,
+      role: payload.role,
+    };
+
+    req[ACTIVE_PERSON] = data;
     return true;
   }
 }

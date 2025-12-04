@@ -15,6 +15,4 @@ export class PaymentController {
   public paymentSuccess(@Body() data: SuccessPaymentDto) {
     return this.paymentService.paymentSuccess(data);
   }
-
-  
 }
