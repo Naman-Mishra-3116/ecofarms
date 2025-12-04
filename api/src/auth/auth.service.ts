@@ -21,6 +21,7 @@ import { VerifyOTPDto } from './dto/verify-otp.dto';
 import { BcryptService } from './providers/bcrypt.provider';
 import { GoogleLoginDto } from './dto/google-login.dto';
 import { GoogleAuthProvider } from './providers/google-auth.provider';
+import { Auth } from 'src/utils/enums/auth.enum';
 
 @Injectable()
 export class AuthService {
@@ -189,11 +190,11 @@ export class AuthService {
   public async verifyOtp(
     email: string,
     otp: VerifyOTPDto,
-    target: 'user' | 'admin',
+    target: Auth,
     res: Response,
   ) {
     const model: Model<any> =
-      target === 'user' ? this.userModel : this.adminModel;
+      target === Auth.User ? this.userModel : this.adminModel;
 
     const entity = await model.findOne({ email });
 
@@ -240,15 +241,15 @@ export class AuthService {
     email: string,
     resetPassDTO: ResetPasswordDto,
     res: Response,
-    target: 'user' | 'admin',
+    target: Auth,
   ) {
     const model: Model<any> =
-      target === 'user' ? this.userModel : this.adminModel;
+      target === Auth.User ? this.userModel : this.adminModel;
     const entity = await model.findOne({ email });
 
     if (!entity) {
       throw new BadRequestException(
-        `${target === 'user' ? 'User' : 'Admin'} with specified email not found`,
+        `${target === Auth.User ? 'User' : 'Admin'} with specified email not found`,
       );
     }
 
