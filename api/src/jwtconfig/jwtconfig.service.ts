@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
+import { Auth } from 'src/utils/enums/auth.enum';
 import { Cookie } from 'src/utils/enums/cookie.enum';
 import { Token } from 'src/utils/enums/token.enum';
 
@@ -22,7 +23,7 @@ export class JwtConfigService {
       [Token.AccessUser]: {
         expiresIn: this.configService.get('jwt.userAccessExpiry'),
         payload: {
-          role: 'user',
+          role: Auth.User,
           id: entity.id,
           email: entity.email,
         },
@@ -31,7 +32,7 @@ export class JwtConfigService {
       [Token.AccessAdmin]: {
         expiresIn: this.configService.get('jwt.adminAccessExpiry'),
         payload: {
-          role: 'admin',
+          role: Auth.Admin,
           id: entity.id,
           email: entity.email,
         },
@@ -137,6 +138,4 @@ export class JwtConfigService {
     const refreshToken = await this.generateToken(entity, Token.Refresh);
     return { accessToken, refreshToken };
   }
-
-  
 }

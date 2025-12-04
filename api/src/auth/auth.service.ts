@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type { Response } from 'express';
-import { Model } from 'mongoose';
+import { Model, Mongoose, Types } from 'mongoose';
 import { Admin } from 'src/admin/admin.schema';
 import { JwtConfigService } from 'src/jwtconfig/jwtconfig.service';
 import { MailService } from 'src/mail/mail.service';
@@ -21,6 +21,7 @@ import { VerifyOTPDto } from './dto/verify-otp.dto';
 import { BcryptService } from './providers/bcrypt.provider';
 import { GoogleLoginDto } from './dto/google-login.dto';
 import { GoogleAuthProvider } from './providers/google-auth.provider';
+import { Auth } from 'src/utils/enums/auth.enum';
 
 @Injectable()
 export class AuthService {
@@ -189,11 +190,11 @@ export class AuthService {
   public async verifyOtp(
     email: string,
     otp: VerifyOTPDto,
-    target: 'user' | 'admin',
+    target: Auth,
     res: Response,
   ) {
     const model: Model<any> =
-      target === 'user' ? this.userModel : this.adminModel;
+      target === Auth.User ? this.userModel : this.adminModel;
 
     const entity = await model.findOne({ email });
 
@@ -240,15 +241,15 @@ export class AuthService {
     email: string,
     resetPassDTO: ResetPasswordDto,
     res: Response,
-    target: 'user' | 'admin',
+    target: Auth,
   ) {
     const model: Model<any> =
-      target === 'user' ? this.userModel : this.adminModel;
+      target === Auth.User ? this.userModel : this.adminModel;
     const entity = await model.findOne({ email });
 
     if (!entity) {
       throw new BadRequestException(
-        `${target === 'user' ? 'User' : 'Admin'} with specified email not found`,
+        `${target === Auth.User ? 'User' : 'Admin'} with specified email not found`,
       );
     }
 
@@ -272,5 +273,36 @@ export class AuthService {
 
   public async googleLogin(googleLoginDto: GoogleLoginDto, res: Response) {
     return this.googleAuthService.authenticate(googleLoginDto, res);
+  }
+
+  public async refreshAccessToken(payload: RefreshPayload, res: Response) {
+    const userId = new Types.ObjectId(payload.id);
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new BadRequestException('User not found!');
+    }
+
+    const token = await this.jwtConfigService.generateToken(
+      {
+        email: user.email,
+        id: user._id.toString(),
+      },
+      Token.AccessUser,
+    );
+
+    const cookie = await this.jwtConfigService.setCookies(
+      Cookie.UserAccess,
+      token,
+      res,
+    );
+
+    if (cookie) {
+      return {
+        status: 'success',
+        error: false,
+        success: true,
+        message: 'Access token refreshed',
+      };
+    }
   }
 }
