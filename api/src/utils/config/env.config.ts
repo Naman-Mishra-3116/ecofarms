@@ -42,5 +42,12 @@ export default () => {
       key: process.env.PAYMENT_API_KEY,
       secret: process.env.PAYMENT_KEY_SECRET,
     },
+
+    uploader: {
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      secret: process.env.CLOUDINARY_API_SECRET,
+      key: process.env.CLOUDINARY_API_KEY,
+      url: process.env.CLOUDINARY_URL,
+    },
   };
 };
