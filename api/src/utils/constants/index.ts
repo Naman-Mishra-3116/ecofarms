@@ -9,3 +9,5 @@ export const RAZORPAY_CLIENT = 'Razorpay_client';
 export const PERMIT = 'permit';
 
 export const REFRESH_USER = 'refresh_user';
+
+export const UPLOAD_CLIENT = 'Upload_client';

@@ -44,10 +44,9 @@ export default () => {
     },
 
     uploader: {
-      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-      secret: process.env.CLOUDINARY_API_SECRET,
-      key: process.env.CLOUDINARY_API_KEY,
-      url: process.env.CLOUDINARY_URL,
+      public_key: process.env.UPLOAD_PUBLIC_KEY,
+      private_key: process.env.UPLOAD_PRIVATE_KEY,
+      url: process.env.UPLOAD_URL_ENDPOINT,
     },
   };
 };
