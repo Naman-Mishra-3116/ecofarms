@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule } from './database/database.module';
+import { DatabaseModule } from './shared/database/database.module';
 import { AdminModule } from './admin/admin.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { JwtconfigModule } from './jwtconfig/jwtconfig.module';
+import { JwtconfigModule } from './shared/jwtconfig/jwtconfig.module';
 import { OtpModule } from './otp/otp.module';
-import { MailModule } from './mail/mail.module';
+import { MailModule } from './shared/mail/mail.module';
 import { PaymentModule } from './payment/payment.module';
 import envConfig from './utils/config/env.config';
 import { APP_GUARD } from '@nestjs/core';

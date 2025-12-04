@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { JwtConfigService } from 'src/jwtconfig/jwtconfig.service';
+import { JwtConfigService } from 'src/shared/jwtconfig/jwtconfig.service';
 import { ACTIVE_PERSON, PERMIT } from 'src/utils/constants';
 import { Auth } from 'src/utils/enums/auth.enum';
 import { Cookie } from 'src/utils/enums/cookie.enum';

@@ -4,7 +4,7 @@ import {
   ExecutionContext,
   Injectable,
 } from '@nestjs/common';
-import { JwtConfigService } from 'src/jwtconfig/jwtconfig.service';
+import { JwtConfigService } from 'src/shared/jwtconfig/jwtconfig.service';
 import { OTP_USER } from 'src/utils/constants';
 import { Cookie } from 'src/utils/enums/cookie.enum';
 import { Token } from 'src/utils/enums/token.enum';
