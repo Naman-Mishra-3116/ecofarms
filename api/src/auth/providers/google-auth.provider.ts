@@ -3,10 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import { JwtConfigService } from 'src/shared/jwtconfig/jwtconfig.service';
-import { UserService } from 'src/user/user.service';
-import { GoogleLoginDto } from '../dto/google-login.dto';
-import { Cookie } from 'src/utils/enums/cookie.enum';
 import { GoogleUser } from 'src/user/interface/google-user.interface';
+import { UserService } from 'src/user/user.service';
+import { Cookie } from 'src/utils/enums/cookie.enum';
+import { GoogleLoginDto } from '../dto/google-login.dto';
 
 @Injectable()
 export class GoogleAuthProvider implements OnModuleInit {
