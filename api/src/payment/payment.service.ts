@@ -1,13 +1,17 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
 import Razorpay from 'razorpay';
 import { RAZORPAY_CLIENT } from 'src/utils/constants';
-import { Payment, PaymentDocument } from './payment.schema';
-import { Model, Types } from 'mongoose';
 import { PAYMENT_STATUS } from 'src/utils/enums/payment.enum';
-import { ValidatePaymentSignature } from './providers/validate-signature.provider';
-import { SuccessPaymentDto } from './dto/success-payment.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { SuccessPaymentDto } from './dto/success-payment.dto';
+import { Payment, PaymentDocument } from './payment.schema';
+import { ValidatePaymentSignature } from './providers/validate-signature.provider';
+import axios from 'axios';
+import { UploadsService } from 'src/shared/uploads/uploads.service';
+import { FileType, UploadFolder } from 'src/utils/enums/upload.enum';
+import { InvoiceService } from 'src/invoice/invoice.service';
 
 @Injectable()
 export class PaymentService {
@@ -17,6 +21,8 @@ export class PaymentService {
     @InjectModel(Payment.name)
     private readonly paymentModel: Model<PaymentDocument>,
     private readonly validateSignature: ValidatePaymentSignature,
+    private readonly uploadService: UploadsService,
+    private readonly invoiceService: InvoiceService,
   ) {}
 
   public async createPayment(data: CreatePaymentDto) {
@@ -77,6 +83,32 @@ export class PaymentService {
       { new: true },
     );
 
+    const invoices = await this.paymentClient.invoices.all({
+      payment_id: razorpay_payment_id,
+    });
+
+    if (!invoices.items.length) {
+      throw new BadRequestException('No invoice found for this order');
+    }
+
+    const invoice = invoices.items[0];
+    const file = await this.getInvoiceBuffer(
+      invoice.short_url as string,
+      paymentDbId,
+    );
+
+    const invoiceDocId = await this.uploadService.uploadFileService(
+      file,
+      UploadFolder.Invoice,
+      FileType.Pdf,
+    );
+
+    const invoiceDoc = await this.invoiceService.createInvoice(
+      invoiceDocId,
+      paymentDbId,
+      invoice.id,
+    );
+
     return {
       status: 'success',
       error: false,
@@ -84,5 +116,19 @@ export class PaymentService {
       message: 'Payment verified successfully',
       data: updatedPayment,
     };
+  }
+
+  public async getInvoiceBuffer(url: string, paymentDbId: Types.ObjectId) {
+    const response = await axios.get(url, {
+      responseType: 'arraybuffer',
+    });
+
+    const buffer = Buffer.from(response.data);
+    return {
+      originalname: `invoice-${paymentDbId}.pdf`,
+      buffer,
+      mimetype: 'application/pdf',
+      size: buffer.length,
+    } as Express.Multer.File;
   }
 }

@@ -46,6 +46,6 @@ export class UploadsService {
       publicId: uploaded.fileId,
     });
 
-    return created;
+    return created._id;
   }
 }
