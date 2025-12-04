@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type { Response } from 'express';
-import { Model } from 'mongoose';
+import { Model, Mongoose, Types } from 'mongoose';
 import { Admin } from 'src/admin/admin.schema';
 import { JwtConfigService } from 'src/jwtconfig/jwtconfig.service';
 import { MailService } from 'src/mail/mail.service';
@@ -272,5 +272,36 @@ export class AuthService {
 
   public async googleLogin(googleLoginDto: GoogleLoginDto, res: Response) {
     return this.googleAuthService.authenticate(googleLoginDto, res);
+  }
+
+  public async refreshAccessToken(payload: RefreshPayload, res: Response) {
+    const userId = new Types.ObjectId(payload.id);
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new BadRequestException('User not found!');
+    }
+
+    const token = await this.jwtConfigService.generateToken(
+      {
+        email: user.email,
+        id: user._id.toString(),
+      },
+      Token.AccessUser,
+    );
+
+    const cookie = await this.jwtConfigService.setCookies(
+      Cookie.UserAccess,
+      token,
+      res,
+    );
+
+    if (cookie) {
+      return {
+        status: 'success',
+        error: false,
+        success: true,
+        message: 'Access token refreshed',
+      };
+    }
   }
 }

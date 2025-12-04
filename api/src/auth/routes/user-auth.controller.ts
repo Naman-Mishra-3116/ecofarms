@@ -11,6 +11,8 @@ import { ResetPasswordGuard } from '../guard/reset-password.guard';
 import { ResetUser } from '../decorators/reset-user.decorator';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { GoogleLoginDto } from '../dto/google-login.dto';
+import { RefreshGuard } from '../guard/refresh-token.guard';
+import { RequestUser } from '../decorators/refresh-user.decorator';
 
 @Controller('auth/user')
 export class UserAuthController {
@@ -55,6 +57,15 @@ export class UserAuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     return this.authService.resetPassword(email, resetPassDTO, res, 'user');
+  }
+
+  @Post('refresh')
+  @UseGuards(RefreshGuard)
+  public refreshToken(
+    @RequestUser() user: RefreshPayload,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.refreshAccessToken(user, res);
   }
 
   @Post('google')
