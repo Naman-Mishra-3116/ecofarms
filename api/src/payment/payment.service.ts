@@ -12,6 +12,8 @@ import axios from 'axios';
 import { UploadsService } from 'src/shared/uploads/uploads.service';
 import { FileType, UploadFolder } from 'src/utils/enums/upload.enum';
 import { InvoiceService } from 'src/invoice/invoice.service';
+import { UserDocument } from 'src/user/user.schema';
+import { Invoices } from 'razorpay/dist/types/invoices';
 
 @Injectable()
 export class PaymentService {
@@ -53,7 +55,9 @@ export class PaymentService {
   public async paymentSuccess(data: SuccessPaymentDto) {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = data;
     const paymentDbId = new Types.ObjectId(data.paymentDbId);
-    const order = this.paymentModel.findById(paymentDbId);
+    const order = await this.paymentModel
+      .findById(paymentDbId)
+      .populate('userId');
 
     if (!order) {
       throw new BadRequestException('Order not found!');
@@ -83,15 +87,10 @@ export class PaymentService {
       { new: true },
     );
 
-    const invoices = await this.paymentClient.invoices.all({
-      payment_id: razorpay_payment_id,
-    });
-
-    if (!invoices.items.length) {
-      throw new BadRequestException('No invoice found for this order');
-    }
-
-    const invoice = invoices.items[0];
+    const invoice = await this.createRazorpayInvoice(
+      order,
+      razorpay_payment_id,
+    );
     const file = await this.getInvoiceBuffer(
       invoice.short_url as string,
       paymentDbId,
@@ -103,11 +102,12 @@ export class PaymentService {
       FileType.Pdf,
     );
 
-    const invoiceDoc = await this.invoiceService.createInvoice(
+    await this.invoiceService.createInvoice(
       invoiceDocId,
       paymentDbId,
       invoice.id,
     );
+
 
     return {
       status: 'success',
@@ -115,6 +115,7 @@ export class PaymentService {
       success: true,
       message: 'Payment verified successfully',
       data: updatedPayment,
+      url: invoice.short_url,
     };
   }
 
@@ -130,5 +131,39 @@ export class PaymentService {
       mimetype: 'application/pdf',
       size: buffer.length,
     } as Express.Multer.File;
+  }
+
+  private async createRazorpayInvoice(
+    order: PaymentDocument,
+    razorpayPaymentId: string,
+  ) {
+    const invoiceData = {
+      type: 'invoice' as const,
+      customer: {
+        name: 'Naman Mishra',
+        email: 'namanwebd@gmail.com',
+      },
+      line_items: [
+        {
+          name: 'Product Purchase',
+          description: 'Order Payment',
+          amount: order.amount * 100,
+          currency: 'INR',
+          quantity: order.quantity,
+        },
+      ],
+      receipt: `rcpt_${order._id}`,
+      payment_id: razorpayPaymentId,
+    };
+
+    const invoice = await this.paymentClient.invoices.create(invoiceData);
+
+    if (invoice.status === 'issued') {
+      return invoice;
+    }
+
+    const finalized = await this.paymentClient.invoices.issue(invoice.id);
+
+    return finalized;
   }
 }
