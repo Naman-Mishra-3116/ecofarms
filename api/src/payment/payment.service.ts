@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import Razorpay from 'razorpay';
@@ -7,7 +7,6 @@ import { UploadsService } from 'src/shared/uploads/uploads.service';
 import { RAZORPAY_CLIENT } from 'src/utils/constants';
 import { PAYMENT_STATUS } from 'src/utils/enums/payment.enum';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { SuccessPaymentDto } from './dto/success-payment.dto';
 import { Payment, PaymentDocument } from './payment.schema';
 import { ValidatePaymentSignature } from './providers/validate-signature.provider';
 
@@ -126,7 +125,7 @@ export class PaymentService {
         status: PAYMENT_STATUS.SUCCESS,
       });
 
-      const uploadedDocId = await this.uploadService.generatePdfReceipt(order);
+      const uploadedDocId = await this.receiptService.generatePdfReceipt(order);
       await this.receiptService.createReceipt(uploadedDocId, order._id);
       return { status: 'success' };
     } catch (error) {
