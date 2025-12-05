@@ -14,6 +14,7 @@ import { AuthGuard } from './common/guard/access-token.guard';
 import { AppValidationPipe } from './common/pipes/app-validation.pipe';
 import { UploadsModule } from './shared/uploads/uploads.module';
 import { InvoiceModule } from './invoice/invoice.module';
+import { PaginationModule } from './shared/pagination/pagination.module';
 
 const ENV_TYPE = process.env.NODE_ENV?.trim();
 
@@ -34,6 +35,7 @@ const ENV_TYPE = process.env.NODE_ENV?.trim();
     PaymentModule,
     UploadsModule,
     InvoiceModule,
+    PaginationModule,
   ],
   providers: [
     {
