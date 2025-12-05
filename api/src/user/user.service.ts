@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './user.schema';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { GoogleUser } from './interface/google-user.interface';
 
 @Injectable()
@@ -30,5 +30,9 @@ export class UserService {
 
   public async findUserByGoogleId(googleId: string) {
     return await this.userModel.findOne({ googleId });
+  }
+
+  public async findUserById(id: Types.ObjectId) {
+    return await this.userModel.findById(id);
   }
 }

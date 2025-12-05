@@ -6,7 +6,7 @@ import { Otp, OtpSchema } from 'src/otp/otp.schema';
 import { Payment, PaymentSchema } from 'src/payment/payment.schema';
 import { User, UserSchema } from 'src/user/user.schema';
 import { Upload, UploadSchema } from '../uploads/uploads.schema';
-import { Invoice, InvoiceSchema } from 'src/invoice/invoice.schema';
+import { Receipt, ReceiptSchema } from 'src/receipt/receipt.schema';
 
 const ENTITIES: ModelDefinition[] = [
   { name: User.name, schema: UserSchema },
@@ -14,9 +14,8 @@ const ENTITIES: ModelDefinition[] = [
   { name: Admin.name, schema: AdminSchema },
   { name: Payment.name, schema: PaymentSchema },
   { name: Upload.name, schema: UploadSchema },
-  { name: Invoice.name, schema: InvoiceSchema },
+  { name: Receipt.name, schema: ReceiptSchema },
 ];
-
 
 @Global()
 @Module({

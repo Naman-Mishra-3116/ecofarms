@@ -1,6 +1,5 @@
 import { Body, Controller, Headers, Post, Req } from '@nestjs/common';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { SuccessPaymentDto } from './dto/success-payment.dto';
 import { PaymentService } from './payment.service';
 
 @Controller('payment')
@@ -11,10 +10,10 @@ export class PaymentController {
     return this.paymentService.createPayment(data);
   }
 
-  @Post('success')
-  public paymentSuccess(@Body() data: SuccessPaymentDto) {
-    return this.paymentService.paymentSuccess(data);
-  }
+  // @Post('success')
+  // public paymentSuccess(@Body() data: SuccessPaymentDto) {
+  //   return this.paymentService.paymentSuccess(data);
+  // }
 
   @Post('razorpay/webhook')
   public callWebHook(

@@ -13,7 +13,7 @@ import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { AuthGuard } from './common/guard/access-token.guard';
 import { AppValidationPipe } from './common/pipes/app-validation.pipe';
 import { UploadsModule } from './shared/uploads/uploads.module';
-import { InvoiceModule } from './invoice/invoice.module';
+import { ReceiptModule } from './receipt/receipt.module';
 import { PaginationModule } from './shared/pagination/pagination.module';
 import { AppController } from './app.controller';
 
@@ -36,7 +36,7 @@ const ENV_TYPE = process.env.NODE_ENV?.trim();
     MailModule,
     PaymentModule,
     UploadsModule,
-    InvoiceModule,
+    ReceiptModule,
     PaginationModule,
   ],
   providers: [

@@ -50,5 +50,9 @@ export default () => {
       private_key: process.env.UPLOAD_PRIVATE_KEY,
       url: process.env.UPLOAD_URL_ENDPOINT,
     },
+
+    client: {
+      qrLink: process.env.CLIENT_QR_CODE_VERIFY
+    }
   };
 };

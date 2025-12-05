@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import Razorpay from 'razorpay';
-import { InvoiceService } from 'src/invoice/invoice.service';
+import { ReceiptService } from 'src/receipt/receipt.service';
 import { UploadsService } from 'src/shared/uploads/uploads.service';
 import { RAZORPAY_CLIENT } from 'src/utils/constants';
 import { PAYMENT_STATUS } from 'src/utils/enums/payment.enum';
@@ -20,9 +20,8 @@ export class PaymentService {
     private readonly paymentModel: Model<PaymentDocument>,
     private readonly validateSignature: ValidatePaymentSignature,
     private readonly uploadService: UploadsService,
-    private readonly invoiceService: InvoiceService,
+    private readonly receiptService: ReceiptService,
   ) {}
-
   public async createPayment(data: CreatePaymentDto) {
     const { userId, amount, productId, quantity } = data;
     const payableAmount = quantity * amount;
@@ -48,49 +47,49 @@ export class PaymentService {
     };
   }
 
-  public async paymentSuccess(data: SuccessPaymentDto) {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = data;
-    const paymentDbId = new Types.ObjectId(data.paymentDbId);
-    const order = await this.paymentModel
-      .findById(paymentDbId)
-      .populate('userId');
+  // public async paymentSuccess(data: SuccessPaymentDto) {
+  //   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = data;
+  //   const paymentDbId = new Types.ObjectId(data.paymentDbId);
+  //   const order = await this.paymentModel
+  //     .findById(paymentDbId)
+  //     .populate('userId');
 
-    if (!order) {
-      throw new BadRequestException('Order not found!');
-    }
+  //   if (!order) {
+  //     throw new BadRequestException('Order not found!');
+  //   }
 
-    const isSignatureValid = this.validateSignature.validatePaymentSignature(
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-    );
+  //   const isSignatureValid = this.validateSignature.validatePaymentSignature(
+  //     razorpay_order_id,
+  //     razorpay_payment_id,
+  //     razorpay_signature,
+  //   );
 
-    if (!isSignatureValid) {
-      await this.paymentModel.findByIdAndUpdate(paymentDbId, {
-        status: PAYMENT_STATUS.FAILED,
-      });
-      throw new BadRequestException('Invalid signature');
-    }
+  //   if (!isSignatureValid) {
+  //     await this.paymentModel.findByIdAndUpdate(paymentDbId, {
+  //       status: PAYMENT_STATUS.FAILED,
+  //     });
+  //     throw new BadRequestException('Invalid signature');
+  //   }
 
-    const updatedPayment = await this.paymentModel.findByIdAndUpdate(
-      paymentDbId,
-      {
-        paymentId: razorpay_payment_id,
-        orderId: razorpay_order_id,
-        signature: razorpay_signature,
-        status: PAYMENT_STATUS.VERIFIED,
-      },
-      { new: true },
-    );
+  //   const updatedPayment = await this.paymentModel.findByIdAndUpdate(
+  //     paymentDbId,
+  //     {
+  //       paymentId: razorpay_payment_id,
+  //       orderId: razorpay_order_id,
+  //       signature: razorpay_signature,
+  //       status: PAYMENT_STATUS.VERIFIED,
+  //     },
+  //     { new: true },
+  //   );
 
-    return {
-      status: 'success',
-      error: false,
-      success: true,
-      message: 'Payment verified successfully',
-      data: updatedPayment,
-    };
-  }
+  //   return {
+  //     status: 'success',
+  //     error: false,
+  //     success: true,
+  //     message: 'Payment verified successfully',
+  //     data: updatedPayment,
+  //   };
+  // }
 
   public async webhookMethod(rawBody: any, razorpaySignature: string) {
     try {
@@ -104,17 +103,23 @@ export class PaymentService {
       }
 
       const event = JSON.parse(rawBody.toString());
-      if (event.event !== 'payment.captured') {
-        return { status: 'ignored', event: event.event };
-      }
-
       const razorpayOrderId = event.payload.payment.entity.order_id;
       const order = await this.paymentModel.findOne({
         orderId: razorpayOrderId,
       });
 
       if (!order) {
+        console.log('order not found');
         return;
+      }
+
+      if (event.event !== 'payment.captured') {
+        await this.paymentModel.findByIdAndUpdate(order._id, {
+          status: PAYMENT_STATUS.FAILED,
+        });
+        return {
+          status: 'Payment Failed',
+        };
       }
 
       await this.paymentModel.findByIdAndUpdate(order._id, {
@@ -122,8 +127,7 @@ export class PaymentService {
       });
 
       const uploadedDocId = await this.uploadService.generatePdfReceipt(order);
-      await this.invoiceService.createInvoice(uploadedDocId, order._id);
-
+      await this.receiptService.createReceipt(uploadedDocId, order._id);
       return { status: 'success' };
     } catch (error) {
       console.log('Webhook Error:', error);
