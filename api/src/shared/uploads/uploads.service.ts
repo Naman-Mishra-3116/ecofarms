@@ -74,7 +74,7 @@ export class UploadsService {
         );
         const logoBase64 = fs.readFileSync(logoPath).toString('base64');
         const logoImage = `data:image/png;base64,${logoBase64}`;
-        const fontsPath = path.join(process.cwd(), 'fonts');
+        const fontsPath = path.join(process.cwd(), 'public', 'fonts');
         const user = await this.userService.findUserById(order.userId);
         const qrImage = await this.receiptService.getQrCodeForReceipt(
           order._id,
@@ -99,7 +99,7 @@ export class UploadsService {
               image: logoImage,
               width: 400,
               opacity: 0.07,
-              absolutePosition: { x: 100, y: 150 },
+              absolutePosition: { x: 100, y: 160 },
             },
           ],
 
@@ -112,12 +112,13 @@ export class UploadsService {
                       columns: [
                         {
                           image: logoImage,
-                          width: 50,
-                          margin: [0, 0, 10, 0],
+                          width: 30, // SAME visual height as text heading
+                          margin: [0, 0, 20, 0],
                         },
                         {
                           text: 'Vrakshalaya Pvt. Ltd.',
                           style: 'company',
+                          margin: [0, 5, 0, 0], // slight vertical align fix
                         },
                       ],
                     },
@@ -145,7 +146,7 @@ export class UploadsService {
             {
               text: 'Customer Details',
               style: 'sectionHeader',
-              margin: [0, 0, 0, 8],
+              margin: [0, 0, 0, 6],
             },
             {
               style: 'tableSection',
@@ -171,7 +172,7 @@ export class UploadsService {
             {
               text: 'Payment Details',
               style: 'sectionHeader',
-              margin: [0, 0, 0, 8],
+              margin: [0, 0, 0, 6],
             },
             {
               style: 'tableSection',
@@ -192,11 +193,11 @@ export class UploadsService {
               margin: [0, 0, 0, 20],
             },
 
-            // BOOKING DETAILS (NEW)
+            // BOOKING DETAILS
             {
               text: 'Booking Details',
               style: 'sectionHeader',
-              margin: [0, 0, 0, 8],
+              margin: [0, 0, 0, 6],
             },
             {
               style: 'tableSection',
@@ -213,7 +214,7 @@ export class UploadsService {
               margin: [0, 0, 0, 30],
             },
 
-            // FOOTER
+
             {
               text: 'Thank you for your booking!',
               style: 'thanks',
@@ -242,8 +243,8 @@ export class UploadsService {
             sectionHeader: {
               fontSize: 15,
               bold: true,
-              color: '#2E7D32',
-              decoration: 'underline',
+              color: '#2E7D32', 
+             
             },
             tableSection: {
               fontSize: 11,
