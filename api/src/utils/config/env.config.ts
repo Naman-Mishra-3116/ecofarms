@@ -42,5 +42,11 @@ export default () => {
       key: process.env.PAYMENT_API_KEY,
       secret: process.env.PAYMENT_KEY_SECRET,
     },
+
+    uploader: {
+      public_key: process.env.UPLOAD_PUBLIC_KEY,
+      private_key: process.env.UPLOAD_PRIVATE_KEY,
+      url: process.env.UPLOAD_URL_ENDPOINT,
+    },
   };
 };
