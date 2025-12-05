@@ -2,18 +2,14 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import Razorpay from 'razorpay';
+import { InvoiceService } from 'src/invoice/invoice.service';
+import { UploadsService } from 'src/shared/uploads/uploads.service';
 import { RAZORPAY_CLIENT } from 'src/utils/constants';
 import { PAYMENT_STATUS } from 'src/utils/enums/payment.enum';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { SuccessPaymentDto } from './dto/success-payment.dto';
 import { Payment, PaymentDocument } from './payment.schema';
 import { ValidatePaymentSignature } from './providers/validate-signature.provider';
-import axios from 'axios';
-import { UploadsService } from 'src/shared/uploads/uploads.service';
-import { FileType, UploadFolder } from 'src/utils/enums/upload.enum';
-import { InvoiceService } from 'src/invoice/invoice.service';
-import { UserDocument } from 'src/user/user.schema';
-import { Invoices } from 'razorpay/dist/types/invoices';
 
 @Injectable()
 export class PaymentService {
@@ -82,32 +78,10 @@ export class PaymentService {
         paymentId: razorpay_payment_id,
         orderId: razorpay_order_id,
         signature: razorpay_signature,
-        status: PAYMENT_STATUS.SUCCESS,
+        status: PAYMENT_STATUS.VERIFIED,
       },
       { new: true },
     );
-
-    const invoice = await this.createRazorpayInvoice(
-      order,
-      razorpay_payment_id,
-    );
-    const file = await this.getInvoiceBuffer(
-      invoice.short_url as string,
-      paymentDbId,
-    );
-
-    const invoiceDocId = await this.uploadService.uploadFileService(
-      file,
-      UploadFolder.Invoice,
-      FileType.Pdf,
-    );
-
-    await this.invoiceService.createInvoice(
-      invoiceDocId,
-      paymentDbId,
-      invoice.id,
-    );
-
 
     return {
       status: 'success',
@@ -115,55 +89,44 @@ export class PaymentService {
       success: true,
       message: 'Payment verified successfully',
       data: updatedPayment,
-      url: invoice.short_url,
     };
   }
 
-  public async getInvoiceBuffer(url: string, paymentDbId: Types.ObjectId) {
-    const response = await axios.get(url, {
-      responseType: 'arraybuffer',
-    });
+  public async webhookMethod(rawBody: any, razorpaySignature: string) {
+    try {
+      const isValidSignature = this.validateSignature.validateWebHookSignature(
+        rawBody,
+        razorpaySignature,
+      );
 
-    const buffer = Buffer.from(response.data);
-    return {
-      originalname: `invoice-${paymentDbId}.pdf`,
-      buffer,
-      mimetype: 'application/pdf',
-      size: buffer.length,
-    } as Express.Multer.File;
-  }
+      if (!isValidSignature) {
+        return { status: 'failed' };
+      }
 
-  private async createRazorpayInvoice(
-    order: PaymentDocument,
-    razorpayPaymentId: string,
-  ) {
-    const invoiceData = {
-      type: 'invoice' as const,
-      customer: {
-        name: 'Naman Mishra',
-        email: 'namanwebd@gmail.com',
-      },
-      line_items: [
-        {
-          name: 'Product Purchase',
-          description: 'Order Payment',
-          amount: order.amount * 100,
-          currency: 'INR',
-          quantity: order.quantity,
-        },
-      ],
-      receipt: `rcpt_${order._id}`,
-      payment_id: razorpayPaymentId,
-    };
+      const event = JSON.parse(rawBody.toString());
+      if (event.event !== 'payment.captured') {
+        return { status: 'ignored', event: event.event };
+      }
 
-    const invoice = await this.paymentClient.invoices.create(invoiceData);
+      const razorpayOrderId = event.payload.payment.entity.order_id;
+      const order = await this.paymentModel.findOne({
+        orderId: razorpayOrderId,
+      });
 
-    if (invoice.status === 'issued') {
-      return invoice;
+      if (!order) {
+        return;
+      }
+
+      await this.paymentModel.findByIdAndUpdate(order._id, {
+        status: PAYMENT_STATUS.SUCCESS,
+      });
+
+      const uploadedDocId = await this.uploadService.generatePdfReceipt(order);
+      await this.invoiceService.createInvoice(uploadedDocId, order._id);
+
+      return { status: 'success' };
+    } catch (error) {
+      console.log('Webhook Error:', error);
     }
-
-    const finalized = await this.paymentClient.invoices.issue(invoice.id);
-
-    return finalized;
   }
 }

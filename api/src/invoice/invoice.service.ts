@@ -13,12 +13,10 @@ export class InvoiceService {
   public async createInvoice(
     docId: Types.ObjectId,
     paymentDocId: Types.ObjectId,
-    invoiceNumber: string,
   ) {
     return await this.invoiceModel.create({
       paymentId: paymentDocId,
       invoiceDocId: docId,
-      invoiceNumber,
     });
   }
 }

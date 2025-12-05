@@ -15,10 +15,12 @@ import { AppValidationPipe } from './common/pipes/app-validation.pipe';
 import { UploadsModule } from './shared/uploads/uploads.module';
 import { InvoiceModule } from './invoice/invoice.module';
 import { PaginationModule } from './shared/pagination/pagination.module';
+import { AppController } from './app.controller';
 
 const ENV_TYPE = process.env.NODE_ENV?.trim();
 
 @Module({
+  controllers: [AppController],
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,

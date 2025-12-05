@@ -41,6 +41,8 @@ export default () => {
     payment: {
       key: process.env.PAYMENT_API_KEY,
       secret: process.env.PAYMENT_KEY_SECRET,
+      webhookSecret: process.env.PAYMENT_WEBHOOK_SECRET,
+      webhookUrl: process.env.PAYMENT_WEBHOOK_URL,
     },
 
     uploader: {
