@@ -16,12 +16,17 @@ import { UploadsModule } from './shared/uploads/uploads.module';
 import { ReceiptModule } from './receipt/receipt.module';
 import { PaginationModule } from './shared/pagination/pagination.module';
 import { AppController } from './app.controller';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 const ENV_TYPE = process.env.NODE_ENV?.trim();
 
 @Module({
   controllers: [AppController],
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ENV_TYPE ? `.env.${ENV_TYPE}` : '.env',

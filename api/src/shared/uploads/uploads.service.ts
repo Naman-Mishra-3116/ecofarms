@@ -11,12 +11,12 @@ import { Model, Types } from 'mongoose';
 import * as path from 'path';
 import PdfPrinter from 'pdfmake';
 import { PaymentDocument } from 'src/payment/payment.schema';
+import { ReceiptService } from 'src/receipt/receipt.service';
+import { UserService } from 'src/user/user.service';
 import { UPLOAD_CLIENT } from 'src/utils/constants';
 import { FileType, UploadFolder } from 'src/utils/enums/upload.enum';
 import { Upload, UploadDocument } from './uploads.schema';
-import { UserService } from 'src/user/user.service';
-import qrCode from 'qrcode';
-import { ReceiptService } from 'src/receipt/receipt.service';
+import logo from 'public/images';
 
 type MulterFile = Express.Multer.File;
 
@@ -66,6 +66,14 @@ export class UploadsService {
   ): Promise<Types.ObjectId> {
     return new Promise(async (resolve, reject) => {
       try {
+        const logoPath = path.join(
+          process.cwd(),
+          'public',
+          'images',
+          'logo.png',
+        );
+        const logoBase64 = fs.readFileSync(logoPath).toString('base64');
+        const logoImage = `data:image/png;base64,${logoBase64}`;
         const fontsPath = path.join(process.cwd(), 'fonts');
         const user = await this.userService.findUserById(order.userId);
         const qrImage = await this.receiptService.getQrCodeForReceipt(
@@ -86,33 +94,54 @@ export class UploadsService {
         const printer = new PdfPrinter(fonts);
 
         const docDefinition = {
+          background: [
+            {
+              image: logoImage,
+              width: 400,
+              opacity: 0.07,
+              absolutePosition: { x: 100, y: 150 },
+            },
+          ],
+
           content: [
             {
               columns: [
                 {
                   stack: [
                     {
-                      text: 'VRAKSHALAYA',
-                      style: 'company',
-                      margin: [0, 0, 0, 2],
+                      columns: [
+                        {
+                          image: logoImage,
+                          width: 50,
+                          margin: [0, 0, 10, 0],
+                        },
+                        {
+                          text: 'Vrakshalaya Pvt. Ltd.',
+                          style: 'company',
+                        },
+                      ],
                     },
+
                     {
                       text: 'Payment Receipt',
                       style: 'header',
-                      margin: [0, 0, 0, 20],
+                      margin: [0, 2, 0, 15],
                     },
                   ],
-                  width: '60%',
+                  width: '*',
                 },
+
                 {
                   image: qrImage,
-                  width: 100,
+                  width: 90,
                   alignment: 'right',
-                  margin: [0, 0, 0, 0],
+                  margin: [0, 15, 0, 0],
                 },
               ],
+              margin: [0, 0, 0, 25],
             },
 
+            // CUSTOMER DETAILS
             {
               text: 'Customer Details',
               style: 'sectionHeader',
@@ -123,15 +152,22 @@ export class UploadsService {
               table: {
                 widths: ['30%', '*'],
                 body: [
-                  ['Name', user.userName || 'N/A'],
-                  ['Email', user.email || 'N/A'],
-                  ['User ID', order.userId.toString()],
+                  [
+                    { text: 'Name', style: 'tableLabel' },
+                    user.userName || 'N/A',
+                  ],
+                  [{ text: 'Email', style: 'tableLabel' }, user.email || 'N/A'],
+                  [
+                    { text: 'User ID', style: 'tableLabel' },
+                    order.userId.toString(),
+                  ],
                 ],
               },
               layout: 'lightHorizontalLines',
               margin: [0, 0, 0, 20],
             },
 
+            // PAYMENT DETAILS
             {
               text: 'Payment Details',
               style: 'sectionHeader',
@@ -153,9 +189,31 @@ export class UploadsService {
                 ],
               },
               layout: 'lightHorizontalLines',
+              margin: [0, 0, 0, 20],
+            },
+
+            // BOOKING DETAILS (NEW)
+            {
+              text: 'Booking Details',
+              style: 'sectionHeader',
+              margin: [0, 0, 0, 8],
+            },
+            {
+              style: 'tableSection',
+              table: {
+                widths: ['30%', '*'],
+                body: [
+                  ['Booking ID', 'BKG-001'],
+                  ['Slot', 'Morning'],
+                  ['Date', '2025-03-22'],
+                  ['Time', '10:00 AM'],
+                ],
+              },
+              layout: 'lightHorizontalLines',
               margin: [0, 0, 0, 30],
             },
 
+            // FOOTER
             {
               text: 'Thank you for your booking!',
               style: 'thanks',
@@ -182,12 +240,17 @@ export class UploadsService {
               color: '#444',
             },
             sectionHeader: {
-              fontSize: 14,
+              fontSize: 15,
               bold: true,
               color: '#2E7D32',
+              decoration: 'underline',
             },
             tableSection: {
               fontSize: 11,
+            },
+            tableLabel: {
+              bold: true,
+              color: '#444',
             },
             thanks: {
               fontSize: 13,
