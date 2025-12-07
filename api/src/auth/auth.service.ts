@@ -290,7 +290,7 @@ export class AuthService {
       Token.AccessUser,
     );
 
-    const cookie = await this.jwtConfigService.setCookies(
+    const cookie = this.jwtConfigService.setCookies(
       Cookie.UserAccess,
       token,
       res,
