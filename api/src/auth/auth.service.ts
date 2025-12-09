@@ -22,6 +22,7 @@ import { BcryptService } from './providers/bcrypt.provider';
 import { GoogleLoginDto } from './dto/google-login.dto';
 import { GoogleAuthProvider } from './providers/google-auth.provider';
 import { Auth } from 'src/utils/enums/auth.enum';
+import { InvalidCodeFieldError } from 'google-auth-library/build/src/auth/executable-response';
 
 @Injectable()
 export class AuthService {
@@ -290,7 +291,7 @@ export class AuthService {
       Token.AccessUser,
     );
 
-    const cookie = await this.jwtConfigService.setCookies(
+    const cookie = this.jwtConfigService.setCookies(
       Cookie.UserAccess,
       token,
       res,
@@ -304,5 +305,76 @@ export class AuthService {
         message: 'Access token refreshed',
       };
     }
+  }
+
+  public async adminSignIn(loginAdminDto: LoginUserOrAdminDto, res: Response) {
+    const { email, password } = loginAdminDto;
+    const admin = await this.adminModel.findOne({ email });
+
+    if (!admin) {
+      throw new BadRequestException(
+        'Admin with specified email does not exist',
+      );
+    }
+
+    const isValidPassword = await this.bcryptService.verifyPassword(
+      password,
+      admin.password,
+    );
+
+    if (!isValidPassword) {
+      throw new BadRequestException('Invalid or incorrect credentials');
+    }
+
+    const payload = {
+      email: admin.email,
+      id: admin._id.toString(),
+    };
+
+    const token = await this.jwtConfigService.generateToken(
+      payload,
+      Token.AccessAdmin,
+    );
+
+    const setCookie = this.jwtConfigService.setCookies(
+      Cookie.AdminAccess,
+      token,
+      res,
+    );
+
+    if (setCookie) {
+      return {
+        success: true,
+        error: false,
+        message: 'Logged in successfully',
+        email: admin.email,
+      };
+    }
+  }
+
+  public async createAdmin(createUserDto: CreateAdminOrUserDto) {
+    const { email, userName, password } = createUserDto;
+    const admin = await this.adminModel.findOne({ email });
+    if (admin) {
+      throw new BadRequestException('Admin already exist');
+    }
+
+    const hashedPassword = await this.bcryptService.hashPassword(password);
+    const newAdmin = await this.adminModel.create({
+      email,
+      password: hashedPassword,
+      userName,
+    });
+
+    return {
+      success: true,
+      error: false,
+      message: 'Admin created successfully!',
+      data: {
+        id: newAdmin._id.toString(),
+        userName: newAdmin.userName,
+      },
+      status: 'success',
+    };
   }
 }

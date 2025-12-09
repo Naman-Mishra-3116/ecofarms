@@ -8,7 +8,12 @@
       {
         "include": "shared/mail/template/**/*",
         "outDir": "dist"
+      },
+      {
+        "include": "../public/**/*",
+        "outDir": "dist/public"
       }
-    ]
+    ],
+    "watchAssets": true
   }
 }

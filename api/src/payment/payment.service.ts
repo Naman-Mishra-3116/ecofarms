@@ -1,19 +1,14 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import Razorpay from 'razorpay';
+import { ReceiptService } from 'src/receipt/receipt.service';
+import { UploadsService } from 'src/shared/uploads/uploads.service';
 import { RAZORPAY_CLIENT } from 'src/utils/constants';
 import { PAYMENT_STATUS } from 'src/utils/enums/payment.enum';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { SuccessPaymentDto } from './dto/success-payment.dto';
 import { Payment, PaymentDocument } from './payment.schema';
 import { ValidatePaymentSignature } from './providers/validate-signature.provider';
-import axios from 'axios';
-import { UploadsService } from 'src/shared/uploads/uploads.service';
-import { FileType, UploadFolder } from 'src/utils/enums/upload.enum';
-import { InvoiceService } from 'src/invoice/invoice.service';
-import { UserDocument } from 'src/user/user.schema';
-import { Invoices } from 'razorpay/dist/types/invoices';
 
 @Injectable()
 export class PaymentService {
@@ -24,9 +19,8 @@ export class PaymentService {
     private readonly paymentModel: Model<PaymentDocument>,
     private readonly validateSignature: ValidatePaymentSignature,
     private readonly uploadService: UploadsService,
-    private readonly invoiceService: InvoiceService,
+    private readonly receiptService: ReceiptService,
   ) {}
-
   public async createPayment(data: CreatePaymentDto) {
     const { userId, amount, productId, quantity } = data;
     const payableAmount = quantity * amount;
@@ -52,118 +46,90 @@ export class PaymentService {
     };
   }
 
-  public async paymentSuccess(data: SuccessPaymentDto) {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = data;
-    const paymentDbId = new Types.ObjectId(data.paymentDbId);
-    const order = await this.paymentModel
-      .findById(paymentDbId)
-      .populate('userId');
+  // public async paymentSuccess(data: SuccessPaymentDto) {
+  //   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = data;
+  //   const paymentDbId = new Types.ObjectId(data.paymentDbId);
+  //   const order = await this.paymentModel
+  //     .findById(paymentDbId)
+  //     .populate('userId');
 
-    if (!order) {
-      throw new BadRequestException('Order not found!');
-    }
+  //   if (!order) {
+  //     throw new BadRequestException('Order not found!');
+  //   }
 
-    const isSignatureValid = this.validateSignature.validatePaymentSignature(
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-    );
+  //   const isSignatureValid = this.validateSignature.validatePaymentSignature(
+  //     razorpay_order_id,
+  //     razorpay_payment_id,
+  //     razorpay_signature,
+  //   );
 
-    if (!isSignatureValid) {
-      await this.paymentModel.findByIdAndUpdate(paymentDbId, {
-        status: PAYMENT_STATUS.FAILED,
+  //   if (!isSignatureValid) {
+  //     await this.paymentModel.findByIdAndUpdate(paymentDbId, {
+  //       status: PAYMENT_STATUS.FAILED,
+  //     });
+  //     throw new BadRequestException('Invalid signature');
+  //   }
+
+  //   const updatedPayment = await this.paymentModel.findByIdAndUpdate(
+  //     paymentDbId,
+  //     {
+  //       paymentId: razorpay_payment_id,
+  //       orderId: razorpay_order_id,
+  //       signature: razorpay_signature,
+  //       status: PAYMENT_STATUS.VERIFIED,
+  //     },
+  //     { new: true },
+  //   );
+
+  //   return {
+  //     status: 'success',
+  //     error: false,
+  //     success: true,
+  //     message: 'Payment verified successfully',
+  //     data: updatedPayment,
+  //   };
+  // }
+
+  public async webhookMethod(rawBody: any, razorpaySignature: string) {
+    try {
+      const isValidSignature = this.validateSignature.validateWebHookSignature(
+        rawBody,
+        razorpaySignature,
+      );
+
+      if (!isValidSignature) {
+        return { status: 'failed' };
+      }
+
+      const event = JSON.parse(rawBody.toString());
+      const razorpayOrderId = event.payload.payment.entity.order_id;
+      const order = await this.paymentModel.findOne({
+        orderId: razorpayOrderId,
       });
-      throw new BadRequestException('Invalid signature');
-    }
 
-    const updatedPayment = await this.paymentModel.findByIdAndUpdate(
-      paymentDbId,
-      {
-        paymentId: razorpay_payment_id,
-        orderId: razorpay_order_id,
-        signature: razorpay_signature,
+      if (!order) {
+        console.log('order not found');
+        return;
+      }
+
+      if (event.event !== 'payment.captured') {
+        await this.paymentModel.findByIdAndUpdate(order._id, {
+          status: PAYMENT_STATUS.FAILED,
+        });
+        return {
+          status: 'Payment Failed',
+        };
+      }
+
+      await this.paymentModel.findByIdAndUpdate(order._id, {
         status: PAYMENT_STATUS.SUCCESS,
-      },
-      { new: true },
-    );
+      });
 
-    const invoice = await this.createRazorpayInvoice(
-      order,
-      razorpay_payment_id,
-    );
-    const file = await this.getInvoiceBuffer(
-      invoice.short_url as string,
-      paymentDbId,
-    );
-
-    const invoiceDocId = await this.uploadService.uploadFileService(
-      file,
-      UploadFolder.Invoice,
-      FileType.Pdf,
-    );
-
-    await this.invoiceService.createInvoice(
-      invoiceDocId,
-      paymentDbId,
-      invoice.id,
-    );
-
-
-    return {
-      status: 'success',
-      error: false,
-      success: true,
-      message: 'Payment verified successfully',
-      data: updatedPayment,
-      url: invoice.short_url,
-    };
-  }
-
-  public async getInvoiceBuffer(url: string, paymentDbId: Types.ObjectId) {
-    const response = await axios.get(url, {
-      responseType: 'arraybuffer',
-    });
-
-    const buffer = Buffer.from(response.data);
-    return {
-      originalname: `invoice-${paymentDbId}.pdf`,
-      buffer,
-      mimetype: 'application/pdf',
-      size: buffer.length,
-    } as Express.Multer.File;
-  }
-
-  private async createRazorpayInvoice(
-    order: PaymentDocument,
-    razorpayPaymentId: string,
-  ) {
-    const invoiceData = {
-      type: 'invoice' as const,
-      customer: {
-        name: 'Naman Mishra',
-        email: 'namanwebd@gmail.com',
-      },
-      line_items: [
-        {
-          name: 'Product Purchase',
-          description: 'Order Payment',
-          amount: order.amount * 100,
-          currency: 'INR',
-          quantity: order.quantity,
-        },
-      ],
-      receipt: `rcpt_${order._id}`,
-      payment_id: razorpayPaymentId,
-    };
-
-    const invoice = await this.paymentClient.invoices.create(invoiceData);
-
-    if (invoice.status === 'issued') {
-      return invoice;
+      const uploadedDocId = await this.receiptService.generatePdfReceipt(order);
+      await this.receiptService.createReceipt(uploadedDocId, order._id);
+      return { status: 'success' };
+    } catch (error) {
+      console.log('Webhook Error:', error);
     }
-
-    const finalized = await this.paymentClient.invoices.issue(invoice.id);
-
-    return finalized;
   }
 }

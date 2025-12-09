@@ -13,13 +13,20 @@ import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { AuthGuard } from './common/guard/access-token.guard';
 import { AppValidationPipe } from './common/pipes/app-validation.pipe';
 import { UploadsModule } from './shared/uploads/uploads.module';
-import { InvoiceModule } from './invoice/invoice.module';
+import { ReceiptModule } from './receipt/receipt.module';
 import { PaginationModule } from './shared/pagination/pagination.module';
+import { AppController } from './app.controller';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 const ENV_TYPE = process.env.NODE_ENV?.trim();
 
 @Module({
+  controllers: [AppController],
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ENV_TYPE ? `.env.${ENV_TYPE}` : '.env',
@@ -34,7 +41,7 @@ const ENV_TYPE = process.env.NODE_ENV?.trim();
     MailModule,
     PaymentModule,
     UploadsModule,
-    InvoiceModule,
+    ReceiptModule,
     PaginationModule,
   ],
   providers: [

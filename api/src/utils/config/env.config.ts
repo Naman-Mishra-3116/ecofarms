@@ -41,6 +41,8 @@ export default () => {
     payment: {
       key: process.env.PAYMENT_API_KEY,
       secret: process.env.PAYMENT_KEY_SECRET,
+      webhookSecret: process.env.PAYMENT_WEBHOOK_SECRET,
+      webhookUrl: process.env.PAYMENT_WEBHOOK_URL,
     },
 
     uploader: {
@@ -48,5 +50,9 @@ export default () => {
       private_key: process.env.UPLOAD_PRIVATE_KEY,
       url: process.env.UPLOAD_URL_ENDPOINT,
     },
+
+    client: {
+      qrLink: process.env.CLIENT_QR_CODE_VERIFY
+    }
   };
 };

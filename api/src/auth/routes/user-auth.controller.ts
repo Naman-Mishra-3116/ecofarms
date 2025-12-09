@@ -1,21 +1,21 @@
 import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
+import { Auth } from 'src/utils/enums/auth.enum';
+import { Person } from '../../common/decorators/active-user.decorator';
+import { Permit } from '../../common/decorators/auth.decorator';
+import { RequestUser } from '../../common/decorators/refresh-user.decorator';
+import { ResetUser } from '../../common/decorators/reset-user.decorator';
+import { VerifiedUser } from '../../common/decorators/verify-user.decorator';
+import { RefreshGuard } from '../../common/guard/refresh-token.guard';
+import { ResetPasswordGuard } from '../../common/guard/reset-password.guard';
+import { VerifyOTPGuard } from '../../common/guard/verify-otp.guard';
 import { AuthService } from '../auth.service';
 import { CreateAdminOrUserDto } from '../dto/create-user.dto';
-import { LoginUserOrAdminDto } from '../dto/login-user.dto';
 import { ForgetPasswordDto } from '../dto/forget-password.dto';
-import { VerifyOTPGuard } from '../../common/guard/verify-otp.guard';
-import { VerifiedUser } from '../../common/decorators/verify-user.decorator';
-import { VerifyOTPDto } from '../dto/verify-otp.dto';
-import { ResetPasswordGuard } from '../../common/guard/reset-password.guard';
-import { ResetUser } from '../../common/decorators/reset-user.decorator';
-import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { GoogleLoginDto } from '../dto/google-login.dto';
-import { RefreshGuard } from '../../common/guard/refresh-token.guard';
-import { RequestUser } from '../../common/decorators/refresh-user.decorator';
-import { Auth } from 'src/utils/enums/auth.enum';
-import { Permit } from '../../common/decorators/auth.decorator';
-import { Person } from '../../common/decorators/active-user.decorator';
+import { LoginUserOrAdminDto } from '../dto/login-user.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
+import { VerifyOTPDto } from '../dto/verify-otp.dto';
 
 @Controller('auth/user')
 export class UserAuthController {

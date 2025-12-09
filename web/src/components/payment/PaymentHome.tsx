@@ -28,18 +28,6 @@ const PaymentHome: React.FC<IProps> = () => {
         order_id: data.orderId,
         name: "Vrakshalaya Pvt Ltd",
         description: "Payment",
-        handler: async (response: any) => {
-          await fetch("http://localhost:3000/payment/success", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              paymentDbId: data._id,
-            }),
-          });
-        },
         prefill: {
           name: "Naman Mishra",
           email: "namanwebd@gmail.com",
